@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, Eye, FileText } from "lucide-react";
+import { Download, Eye, FileText, Printer } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import PreviewModal from "@/components/PreviewModal";
 
 const templates = {
   employment: {
@@ -72,6 +74,7 @@ c) Not disclose the Confidential Information to any third party without prior wr
 const TemplateDetails = () => {
   const { id } = useParams();
   const { toast } = useToast();
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const template = templates[id as keyof typeof templates];
 
@@ -93,6 +96,38 @@ const TemplateDetails = () => {
     });
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${template.title}</title>
+            <style>
+              body {
+                font-family: serif;
+                line-height: 1.6;
+                padding: 2rem;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              pre {
+                white-space: pre-wrap;
+                font-family: serif;
+                font-size: 12pt;
+              }
+            </style>
+          </head>
+          <body>
+            <pre>${template.preview}</pre>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   return (
     <div className="container mx-auto px-6 py-12 animate-enter">
       <div className="max-w-4xl mx-auto">
@@ -109,9 +144,23 @@ const TemplateDetails = () => {
             <Download className="mr-2 h-5 w-5" />
             Download Template
           </Button>
-          <Button variant="outline" size="lg" className="flex-1">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="flex-1"
+            onClick={() => setIsPreviewOpen(true)}
+          >
             <Eye className="mr-2 h-5 w-5" />
             Preview
+          </Button>
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="flex-1"
+            onClick={handlePrint}
+          >
+            <Printer className="mr-2 h-5 w-5" />
+            Print
           </Button>
         </div>
 
@@ -125,6 +174,13 @@ const TemplateDetails = () => {
           </pre>
         </Card>
       </div>
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        content={template.preview}
+        title={template.title}
+      />
     </div>
   );
 };
