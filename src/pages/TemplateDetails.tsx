@@ -5,12 +5,32 @@ import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import PreviewModal from "@/components/PreviewModal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const formSchema = z.object({
+  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  recipientName: z.string().min(2, "Recipient name must be at least 2 characters"),
+  effectiveDate: z.string(),
+  confidentialInfo: z.string().min(10, "Please provide more detail about the confidential information"),
+});
 
 const templates = {
   employment: {
     title: "Employment Contract",
-    description:
-      "A comprehensive employment agreement template suitable for businesses of all sizes.",
+    description: "A comprehensive employment agreement template suitable for businesses of all sizes.",
     category: "Employment",
     preview: `EMPLOYMENT AGREEMENT
 
@@ -42,22 +62,23 @@ The Employee shall be entitled to participate in the employee benefit plans prov
   },
   nda: {
     title: "Non-Disclosure Agreement",
-    description:
-      "Protect your confidential information with this comprehensive NDA template.",
+    description: "Protect your confidential information with this NDA template.",
     category: "Legal",
     preview: `NON-DISCLOSURE AGREEMENT
 
-This Non-Disclosure Agreement (the "Agreement") is entered into on [DATE] between:
+This Non-Disclosure Agreement (the "Agreement") is entered into on [effectiveDate] between:
 
-[PARTY A NAME], located at [ADDRESS] ("Disclosing Party"),
+[companyName], ("Disclosing Party"),
 
 and
 
-[PARTY B NAME], located at [ADDRESS] ("Receiving Party").
+[recipientName], ("Receiving Party").
 
 1. CONFIDENTIAL INFORMATION
 
-"Confidential Information" means any information disclosed by the Disclosing Party to the Receiving Party, either directly or indirectly, in writing, orally or by inspection of tangible objects.
+The following information shall be considered Confidential Information under this agreement:
+
+[confidentialInfo]
 
 2. OBLIGATIONS
 
@@ -75,8 +96,19 @@ const TemplateDetails = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [customizedPreview, setCustomizedPreview] = useState("");
   
   const template = templates[id as keyof typeof templates];
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      companyName: "",
+      recipientName: "",
+      effectiveDate: new Date().toISOString().split('T')[0],
+      confidentialInfo: "",
+    },
+  });
 
   if (!template) {
     return (
@@ -119,13 +151,22 @@ const TemplateDetails = () => {
             </style>
           </head>
           <body>
-            <pre>${template.preview}</pre>
+            <pre>${customizedPreview || template.preview}</pre>
           </body>
         </html>
       `);
       printWindow.document.close();
       printWindow.print();
     }
+  };
+
+  const updatePreview = (values: z.infer<typeof formSchema>) => {
+    let preview = template.preview;
+    preview = preview.replace("[companyName]", values.companyName || "[Company Name]");
+    preview = preview.replace("[recipientName]", values.recipientName || "[Recipient Name]");
+    preview = preview.replace("[effectiveDate]", values.effectiveDate || "[Date]");
+    preview = preview.replace("[confidentialInfo]", values.confidentialInfo || "[Confidential Information Description]");
+    setCustomizedPreview(preview);
   };
 
   return (
@@ -139,46 +180,99 @@ const TemplateDetails = () => {
           <p className="text-lg text-muted-foreground">{template.description}</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Customize Template</h2>
+            <Form {...form}>
+              <form onChange={() => updatePreview(form.getValues())} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter company name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recipientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recipient Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter recipient name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="effectiveDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Effective Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confidentialInfo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confidential Information</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Describe the confidential information" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Preview</h2>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(true)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Full Preview
+                </Button>
+                <Button variant="outline" size="sm" onClick={handlePrint}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
+            </div>
+            <pre className="text-sm bg-secondary p-4 rounded-lg overflow-auto max-h-[400px] whitespace-pre-wrap">
+              {customizedPreview || template.preview}
+            </pre>
+          </Card>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4">
           <Button onClick={handleDownload} size="lg" className="flex-1">
             <Download className="mr-2 h-5 w-5" />
             Download Template
           </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="flex-1"
-            onClick={() => setIsPreviewOpen(true)}
-          >
-            <Eye className="mr-2 h-5 w-5" />
-            Preview
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="flex-1"
-            onClick={handlePrint}
-          >
-            <Printer className="mr-2 h-5 w-5" />
-            Print
-          </Button>
         </div>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Template Preview</h2>
-            <FileText className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <pre className="legal-text whitespace-pre-wrap text-sm bg-secondary p-6 rounded-lg overflow-auto max-h-[600px]">
-            {template.preview}
-          </pre>
-        </Card>
       </div>
 
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        content={template.preview}
+        content={customizedPreview || template.preview}
         title={template.title}
       />
     </div>
