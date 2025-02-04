@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, Eye, FileText, Printer } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Download, Eye, FileText, Printer, ArrowLeft } from "lucide-react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import PreviewModal from "@/components/PreviewModal";
@@ -19,6 +19,14 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
@@ -94,6 +102,7 @@ c) Not disclose the Confidential Information to any third party without prior wr
 
 const TemplateDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [customizedPreview, setCustomizedPreview] = useState("");
@@ -110,68 +119,117 @@ const TemplateDetails = () => {
     },
   });
 
-  if (!template) {
+  if (!id || !template) {
     return (
       <div className="container mx-auto px-6 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">Template Not Found</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-8">
           The template you're looking for doesn't exist.
         </p>
+        <Button variant="outline" onClick={() => navigate('/templates')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Templates
+        </Button>
       </div>
     );
   }
 
   const handleDownload = () => {
-    toast({
-      title: "Download Started",
-      description: "Your template is being prepared for download.",
-    });
+    try {
+      // Create a Blob with the template content
+      const blob = new Blob([customizedPreview || template.preview], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${template.title.toLowerCase().replace(/\s+/g, '-')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download Started",
+        description: "Your template is being downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "There was an error downloading your template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>${template.title}</title>
-            <style>
-              body {
-                font-family: serif;
-                line-height: 1.6;
-                padding: 2rem;
-                max-width: 800px;
-                margin: 0 auto;
-              }
-              pre {
-                white-space: pre-wrap;
-                font-family: serif;
-                font-size: 12pt;
-              }
-            </style>
-          </head>
-          <body>
-            <pre>${customizedPreview || template.preview}</pre>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
+    try {
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>${template.title}</title>
+              <style>
+                body {
+                  font-family: serif;
+                  line-height: 1.6;
+                  padding: 2rem;
+                  max-width: 800px;
+                  margin: 0 auto;
+                }
+                pre {
+                  white-space: pre-wrap;
+                  font-family: serif;
+                  font-size: 12pt;
+                }
+              </style>
+            </head>
+            <body>
+              <pre>${customizedPreview || template.preview}</pre>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      } else {
+        throw new Error("Could not open print window");
+      }
+    } catch (error) {
+      toast({
+        title: "Print Failed",
+        description: "There was an error preparing the document for printing. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const updatePreview = (values: z.infer<typeof formSchema>) => {
     let preview = template.preview;
-    preview = preview.replace("[companyName]", values.companyName || "[Company Name]");
-    preview = preview.replace("[recipientName]", values.recipientName || "[Recipient Name]");
-    preview = preview.replace("[effectiveDate]", values.effectiveDate || "[Date]");
-    preview = preview.replace("[confidentialInfo]", values.confidentialInfo || "[Confidential Information Description]");
+    preview = preview.replace(/\[companyName\]/g, values.companyName || "[Company Name]");
+    preview = preview.replace(/\[recipientName\]/g, values.recipientName || "[Recipient Name]");
+    preview = preview.replace(/\[effectiveDate\]/g, values.effectiveDate || "[Date]");
+    preview = preview.replace(/\[confidentialInfo\]/g, values.confidentialInfo || "[Confidential Information Description]");
     setCustomizedPreview(preview);
   };
 
   return (
     <div className="container mx-auto px-6 py-12 animate-enter">
       <div className="max-w-4xl mx-auto">
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <Link to="/">Home</Link>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <Link to="/templates">Templates</Link>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{template.title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <div className="mb-8">
           <span className="text-sm text-primary font-medium">
             {template.category}
