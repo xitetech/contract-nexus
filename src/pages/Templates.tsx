@@ -14,9 +14,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const templates = [
   {
@@ -25,6 +38,7 @@ const templates = [
     description: "Standard employment agreement for hiring new employees.",
     category: "Employment",
     tags: ["HR", "Hiring", "Business"],
+    preview: "This Employment Agreement (the 'Agreement') is made between...",
   },
   {
     id: "nda",
@@ -32,6 +46,7 @@ const templates = [
     description: "Protect your confidential information with this NDA template.",
     category: "Legal",
     tags: ["Confidentiality", "Business", "Legal Protection"],
+    preview: "This Non-Disclosure Agreement (the 'Agreement') is entered into...",
   },
   {
     id: "service",
@@ -74,6 +89,18 @@ const Templates = () => {
 
   return (
     <div className="container mx-auto px-6 py-12 animate-enter">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Templates</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Contract Templates</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -110,39 +137,48 @@ const Templates = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTemplates.map((template) => (
-          <Link
-            key={template.id}
-            to={`/templates/${template.id}`}
-            className="template-card group"
-          >
-            <Card className="h-full transition-all duration-200 hover:shadow-lg">
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-primary font-medium">
-                    {template.category}
-                  </span>
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <CardTitle className="text-xl">{template.title}</CardTitle>
-                <CardDescription>{template.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {template.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-accent px-2 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Button variant="secondary" className="w-full group-hover:bg-primary group-hover:text-white transition-colors">
-                  View Template
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
+          <HoverCard key={template.id}>
+            <HoverCardTrigger asChild>
+              <Link
+                to={`/templates/${template.id}`}
+                className="template-card group"
+              >
+                <Card className="h-full transition-all duration-200 hover:shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-primary font-medium">
+                        {template.category}
+                      </span>
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <CardTitle className="text-xl">{template.title}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {template.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs bg-accent px-2 py-1 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <Button variant="secondary" className="w-full group-hover:bg-primary group-hover:text-white transition-colors">
+                      View Template
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">{template.title}</h4>
+                <p className="text-sm text-muted-foreground">{template.preview}</p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         ))}
       </div>
     </div>
