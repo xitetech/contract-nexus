@@ -17,7 +17,6 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -54,6 +53,7 @@ const templates = [
     description: "Define the terms of your service provision with this template.",
     category: "Business",
     tags: ["Services", "Business", "Contracts"],
+    preview: "This Service Agreement outlines the terms and conditions...",
   },
   {
     id: "rental",
@@ -61,6 +61,7 @@ const templates = [
     description: "Comprehensive rental/lease agreement for property management.",
     category: "Real Estate",
     tags: ["Property", "Rental", "Lease"],
+    preview: "This Rental Agreement is made and entered into on [DATE]...",
   },
   {
     id: "sales",
@@ -68,10 +69,67 @@ const templates = [
     description: "Standard sales agreement for goods and services.",
     category: "Business",
     tags: ["Sales", "Commerce", "Business"],
+    preview: "This Sales Agreement is made between the Seller and Buyer...",
   },
+  {
+    id: "consulting",
+    title: "Consulting Agreement",
+    description: "Professional consulting services contract template.",
+    category: "Business",
+    tags: ["Consulting", "Services", "Professional"],
+    preview: "This Consulting Agreement defines the terms of service...",
+  },
+  {
+    id: "partnership",
+    title: "Partnership Agreement",
+    description: "Establish terms for business partnerships and joint ventures.",
+    category: "Business",
+    tags: ["Partnership", "Business Formation", "Legal"],
+    preview: "This Partnership Agreement establishes the terms between partners...",
+  },
+  {
+    id: "intellectual-property",
+    title: "IP Assignment Agreement",
+    description: "Transfer intellectual property rights with this agreement.",
+    category: "Legal",
+    tags: ["IP", "Legal", "Rights"],
+    preview: "This Intellectual Property Assignment Agreement transfers...",
+  },
+  {
+    id: "independent-contractor",
+    title: "Independent Contractor Agreement",
+    description: "Define terms for hiring independent contractors.",
+    category: "Employment",
+    tags: ["Contractor", "Employment", "Services"],
+    preview: "This Independent Contractor Agreement establishes...",
+  },
+  {
+    id: "software-license",
+    title: "Software License Agreement",
+    description: "License software products with this comprehensive agreement.",
+    category: "Technology",
+    tags: ["Software", "Licensing", "Technology"],
+    preview: "This Software License Agreement grants the right to use...",
+  },
+  {
+    id: "confidentiality",
+    title: "Confidentiality Agreement",
+    description: "Protect sensitive information with this agreement.",
+    category: "Legal",
+    tags: ["Confidentiality", "Legal", "Privacy"],
+    preview: "This Confidentiality Agreement ensures the protection of...",
+  },
+  {
+    id: "website-terms",
+    title: "Website Terms of Service",
+    description: "Standard terms of service for website usage.",
+    category: "Technology",
+    tags: ["Website", "Terms", "Digital"],
+    preview: "These Terms of Service govern the use of the website...",
+  }
 ];
 
-const categories = ["All", "Business", "Employment", "Legal", "Real Estate"];
+const categories = ["All", "Business", "Employment", "Legal", "Real Estate", "Technology"];
 
 const Templates = () => {
   const [searchQuery, setSearchQuery] = useState("");
